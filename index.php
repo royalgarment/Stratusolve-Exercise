@@ -76,31 +76,70 @@
         var triggerElement = $(event.relatedTarget); // Element that triggered the modal
         var modal = $(this);
         if (triggerElement.attr("id") == 'newTask') {
-            modal.find('.modal-title').text('New Task');
+        	document.getElementById("InputTaskName").value = "";
+        	document.getElementById("InputTaskDescription").value = "";
+
+        	modal.find('.modal-title').text('New Task');
             $('#deleteTask').hide();
             currentTaskId = -1;
         } else {
+        	var funcName = 'retrieve';
+        	 var taskId = triggerElement.attr("id");
+            $.post('update_task.php', { funcName:funcName,taskId:taskId }, function(data){
+            	var json = JSON.parse(data);
+            	document.getElementById("InputTaskName").value = json["TaskName"];
+            	document.getElementById("InputTaskDescription").value = json["TaskDescription"];
+            });
             modal.find('.modal-title').text('Task details');
             $('#deleteTask').show();
             currentTaskId = triggerElement.attr("id");
             console.log('Task ID: '+triggerElement.attr("id"));
         }
     });
+    
     $('#saveTask').click(function() {
         //Assignment: Implement this functionality
-        alert('Save... Id:'+currentTaskId);
-        $('#myModal').modal('hide');
-        updateTaskList();
+        var taskName = $('#InputTaskName').val();
+        var taskDescription = $('#InputTaskDescription').val();
+        var taskId = currentTaskId;
+        var funcName = 'save';
+        $.post('update_task.php', { funcName:funcName,taskId:taskId, taskName: taskName, taskDescription:taskDescription }, function(data){
+        	var json = JSON.parse(data);
+        	if(json["success"] == "false"){
+            	alert(json["message"]);
+            }
+        })     .done(function() {
+      	  $('#myModal').modal('hide');
+          updateTaskList();
+	});       
+      
     });
+    
     $('#deleteTask').click(function() {
         //Assignment: Implement this functionality
-        alert('Delete... Id:'+currentTaskId);
-        $('#myModal').modal('hide');
-        updateTaskList();
+//         alert('Delete... Id:'+currentTaskId);
+        var taskId = currentTaskId;
+        var funcName = 'delete';
+        $.post('update_task.php', { funcName:funcName, taskId:taskId }, function(data){
+
+            
+        	var json = JSON.parse(data);
+
+        	if(json["success"] == "false"){
+            	alert(json["message"]);
+            }
+        })
+        .done(function() {
+        	  $('#myModal').modal('hide');
+              updateTaskList();
+  	});
+        
     });
+    
     function updateTaskList() {
         $.post("list_tasks.php", function( data ) {
             $( "#TaskList" ).html( data );
+//             alert('ran update');
         });
     }
     updateTaskList();
